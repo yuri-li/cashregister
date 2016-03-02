@@ -1,0 +1,24 @@
+group 'liyy.exercise'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'groovy'
+apply plugin: 'java'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+repositories {
+    mavenLocal()   //使用 mavenLocal() 时，gradle 会查找 Maven 配置文件${user.home}/.m2/settings.xml
+    //设置url必须使用下面的方式。如果使用url 'url1','url2',只有url2会生效。
+    //如果希望gradle依次使用配置的url（在前一个url找不到文件时，自动启用下一个），就必须使用下面的写法
+    maven {url 'http://repo2.maven.org/maven2/'  }
+    maven {url 'http://maven.oschina.net/content/groups/public/'  }
+    mavenCentral()
+}
+
+dependencies {
+    compile ("org.codehaus.groovy:groovy-all:2.4.5")
+    testCompile("junit:junit:4.12")
+}
+//显示项目编译生成目录(groovy的语法，类似System.out.println(""))
+println "项目编译生成的目录：${project.buildDir}"
