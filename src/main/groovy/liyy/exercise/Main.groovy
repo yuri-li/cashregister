@@ -12,4 +12,4 @@ Strategy.values().each {
     buffer << it.descrption << "\n"  << CashRegister.getMessage(it) << "====================分割线============================\n"
 }
 println buffer.toString()
-//new File("cashregister.txt") << buffer.toString()
+new File("cashregister.txt") << buffer.toString()
