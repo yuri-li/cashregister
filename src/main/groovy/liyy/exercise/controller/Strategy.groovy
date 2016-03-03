@@ -22,23 +22,28 @@ enum Strategy {
     String descrption
     Map promotion //优惠活动
     List<String> shoppingList //购物清单
+
     Strategy(String descrption,Map promotion,List<String> shoppingList){
         this.descrption = descrption
-        if(promotion?.size() == 2){
-            promotion = promotion.sort {a,b ->
-                b.key.ordinal() <=> a.key.ordinal()
+        //根据优先级，修正数据
+        this.promotion = correctDataByPriority(promotion)
+        this.shoppingList = shoppingList
+    }
+
+    private Map correctDataByPriority(Map promotion) {
+        if (promotion?.size() > 1) {
+            //按照优先级排序，优先级低的，排前面
+            promotion = promotion.sort { a, b ->
+                a.key.ordinal() <=> b.key.ordinal()
             }
-            def temp
-            promotion.eachWithIndex{entry, int i ->
-                if(i == 0){
-                    temp = entry
-                    promotion << temp
-                }else{
-                    promotion << [(entry.key):(entry.value - temp.value)]
+            promotion.eachWithIndex { entry1, int i ->
+                promotion.eachWithIndex { entry2, int j ->
+                    if (j > i) {
+                        entry1.value = entry1.value - entry2.value
+                    }
                 }
             }
         }
-        this.promotion = promotion
-        this.shoppingList = shoppingList
+        return promotion
     }
 }
