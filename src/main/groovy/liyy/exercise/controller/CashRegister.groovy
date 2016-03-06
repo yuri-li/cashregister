@@ -1,71 +1,64 @@
 package liyy.exercise.controller
 
 import liyy.exercise.model.Product
+import liyy.exercise.model.PromotionEnum
 
 /**
  * Created by Yuri on 2016/3/2.
+ * 收银机
  */
 class CashRegister {
-    static String getMessage(Strategy strategy){
-        String text = '''\
-***<没钱赚商店>购物清单***
-${shoppingListMessage}${freeMessage}
-总计：${total}(元)${saveMoneyMessage}
-**********************
-'''
-        //补全产品的数量、金额等数据
-        List<Product> products = buildProducts(strategy)
-        double total = 0 //总计
-        double saveMoney = 0 //节省
-        String shoppingListMessage = ""
-        String freeMessage = ""
-        products.each {
-            total += it.total
-            if(shoppingListMessage){
-                shoppingListMessage += "\n"
-            }
-            shoppingListMessage += "${it.shoppingListMessage}"
-
-            if(it.saveMoney){
-                saveMoney += it.saveMoney
-            }
-            if(it.freeNumber){
-                if(freeMessage){
-                    freeMessage += "\n"
-                }
-                freeMessage += "${it.freeMessage}"
+    String getMessage(Strategy strategy){
+        List<Product> shoppingList = buildShoppingList(strategy)
+        List<String> freeMessageList = []
+        shoppingList.each {
+            if (it.freeMessage) {
+                freeMessageList << it.freeMessage
             }
         }
-        freeMessage = buildFreeMessage(freeMessage)
-        String saveMoneyMessage = buildSaveMoneyMessage(saveMoney)
-        def binding = ["shoppingListMessage":shoppingListMessage,"freeMessage":freeMessage,"total":total,"saveMoneyMessage":saveMoneyMessage]
+        def binding = ["shoppingList":shoppingList,"freeMessageList":freeMessageList]
         new groovy.text.SimpleTemplateEngine().createTemplate(text).make(binding).toString()
     }
-
-    static String buildFreeMessage(String freeMessage) {
-        String text = '''\
-<% if(freeMessage){out.print("""
-----------------------
-买二赠一商品：
-${freeMessage}""")} %>
-----------------------\
-'''
-        new groovy.text.SimpleTemplateEngine().createTemplate(text).make(["freeMessage":freeMessage]).toString()
+/**
+ * 注：打折商品，需要输出节省的金额。所以，每个商品的具体信息，与活动有关
+ */
+    private static final String text = '''\
+***<没钱赚商店>购物清单***
+<%
+    if(shoppingList){
+        shoppingList.each{
+            out.println(it.shoppingListMessage)
+        }
+        out.println "----------------------"
     }
-
-    static String buildSaveMoneyMessage(double saveMoney) {
-        String text = '''\
-<% if(saveMoney){out.print("""
-节省：${saveMoney}(元)""")} %>\
-'''
-        new groovy.text.SimpleTemplateEngine().createTemplate(text).make(["saveMoney":saveMoney]).toString()
+%>\
+<%
+    if(freeMessageList){
+        out.println "买二赠一商品："
+        freeMessageList.each{
+            out.println(it)
+        }
+        out.println "----------------------"
     }
-
-    private static List<Product> buildProducts(Strategy strategy) {
-        Map<String,Product> map = [:]
-        Map promotion = strategy.promotion
+%>\
+总计：${shoppingList.sum{it.total}}(元)
+<%
+    double saveMoney = shoppingList.sum{it.saveMoney}
+    if(saveMoney){
+        out.println("节省：${saveMoney}(元)")
+    }
+%>**********************
+'''
+    /**
+     * 根据活动详情、购物清单，填充商品的小计、节省金额等信息
+     * @param strategy
+     */
+    private List<Product> buildShoppingList(Strategy strategy) {
+        assert strategy.shoppingList : "购物清单为空，不能结算"
+        List<Product> shoppingList = []
+        Map promotions = strategy.promotions
         List<Product> list = []
-        strategy.shoppingList?.each {
+        strategy.shoppingList.each {
             list << Product.getProduct(it)
         }
         list.groupBy{it.id}?.sort{a,b->a.key <=> b.key}?.each {
@@ -77,17 +70,20 @@ ${freeMessage}""")} %>
             }
             Product tempProduct = tempList?.get(0)
             tempProduct?.number = number
-            if(promotion){
-                for(key in promotion.keySet()){
-                    if(promotion.get(key).contains(tempId)){
+            if(promotions){
+                for(key in promotions.keySet()){
+                    if(promotions.get(key).contains(tempId)){
                         tempProduct.promotion = key
                         break
                     }
                 }
             }
-            tempProduct.rebuildProduct()
-            map << [(tempId):tempProduct]
+            if(!tempProduct.promotion){
+                tempProduct.promotion = PromotionEnum.none
+            }
+            tempProduct.rebuild()
+            shoppingList << tempProduct
         }
-        return map.values().asList()
+        return shoppingList
     }
 }
