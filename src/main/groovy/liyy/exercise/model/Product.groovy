@@ -4,7 +4,7 @@ import groovy.transform.ToString
 
 /**
  * Created by Yuri on 2016/3/2.<br/>
- * 抽象产品，针对当前环境抽象出来的model<br/>
+ * 针对当前环境抽象出来的model<br/>
  * 为了便于演示，每种产品，都写死id,name,quantifier,price
  */
 @ToString
@@ -21,6 +21,7 @@ class Product {
    String shoppingListMessage //购物清单
    String freeMessage //买二赠一，赠送物品的清单
    PromotionEnum promotion //享受的优惠活动
+   //预设值各种商品的id<-->参数
    private static final Map products = ["ITEM000001":["id":"ITEM000001","name":"可口可乐","quantifier":"瓶","price":3.00],
                            "ITEM000002":["id":"ITEM000002","name":"羽毛球","quantifier":"个","price":1.00],
                            "ITEM000003":["id":"ITEM000003","name":"苹果","quantifier":"斤","price":5.50]]
@@ -57,9 +58,7 @@ class Product {
          String key = it.key
          def binding = ["product":this]
          def text = new groovy.text.SimpleTemplateEngine().createTemplate(it.value).make(binding).toString()
-         if("realNumber" == key || "freeNumber" == key){
-            this."${key}" = Eval.me(text)
-         }else if("total" == key || "saveMoney" == key){
+         if("realNumber" == key || "freeNumber" == key || "total" == key || "saveMoney" == key){
             this."${key}" = Eval.me(text)
          }else{
             this."${key}" = text
