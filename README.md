@@ -1,6 +1,6 @@
 # cashregister
-ThoughtWorks代码题目：收银机
-测试脚本：src/main/liyy/exercise/Main.groovy
+>ThoughtWorks代码题目：收银机
+>测试脚本：src/main/liyy/exercise/Main.groovy
 
 # 一、需求描述
 原文见：[ThoughtWorks代码题目](https://jinshuju.net/f/n0ddSe?from=groupmessage&isappinstalled=0)
